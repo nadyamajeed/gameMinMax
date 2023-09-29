@@ -1,15 +1,19 @@
+########## set up ##########
+
 # load libraries
 library(gsheet)
 library(dplyr)
 library(tidyr)
 library(clipr)
 
+# read in type vs type data
+combis = read.csv("https://raw.githubusercontent.com/nadyamajeed/gameMinMax/main/pokemongo/combis.csv")
+
+########## score my pokemon ##########
+
 # custom functions for convenience
 findAttackers = function(x) combis$Attacker[combis %>% with(Defender==x & AttackMultiplier=="Strong")]
 findTargets = function(x) combis$Defender[combis %>% with(Attacker==x & AttackMultiplier=="Strong")]
-
-# read in type vs type data
-combis = read.csv("https://raw.githubusercontent.com/nadyamajeed/gameMinMax/main/pokemongo/combis.csv")
 
 # read in and clean my partial pokemon database
 myPokemon = 
@@ -50,8 +54,25 @@ for(i in 1:nrow(myPokemon)) {
     paste0(collapse = ", ")
 }; rm(i); rm(currentHide); rm(currentFite); rm(safeFrom)
 
+# clean up and write to clipboard
 myPokemon = myPokemon %>%
   dplyr::select(-Type1, -Type2) %>%
-  dplyr::arrange(`Gap in CP`, -`Current CP`)
+  dplyr::arrange(`Gap in CP`, -`Current CP`) %>% 
+  clipr::write_clip()
 
-myPokemon %>% clipr::write_clip()
+########## create teams against each type ##########
+
+types = combis$Defender %>% unique()
+
+for(type in types) {
+  cat("\nAnti-", type, " Team\n", sep = "")
+  myPokemon %>%
+    dplyr::arrange(-`Current CP`) %>%
+    dplyr::filter(grepl(type, `USE AGAINST`)) %>%
+    dplyr::select(Name, `Current CP`, `Fast Attack`) %>%
+    dplyr::slice(1:6) %>%
+    as.data.frame() %>%
+    print()
+}; rm(type)
+
+########## end of code ##########
