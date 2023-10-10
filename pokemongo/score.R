@@ -68,8 +68,9 @@ for(type in types) {
   cat("\nAnti-", type, " Team\n", sep = "")
   myPokemon %>%
     dplyr::arrange(-`Current CP`) %>%
+    dplyr::filter(!grepl(type, `HIDE FROM`)) %>%
     dplyr::filter(grepl(type, `USE AGAINST`)) %>%
-    dplyr::select(Name, `Current CP`, `Fast Attack`) %>%
+    dplyr::select(Species, `Current CP`, `Fast Attack`) %>%
     dplyr::slice(1:6) %>%
     as.data.frame() %>%
     print()
